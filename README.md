@@ -10,7 +10,7 @@
 
 4. Decoder
 
-5. Layer Norm
+5. Layer Norm √
 
 6. CrossAttention
 
