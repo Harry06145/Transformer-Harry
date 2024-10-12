@@ -10,6 +10,6 @@
 
 5. Layer Norm
 
-6. CrossAttention and Transformer 
+6. CrossAttention
 
 # This code will be replaced to MindSpore from Pytorch.
