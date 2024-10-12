@@ -12,4 +12,4 @@
 
 6. CrossAttention and Transformer 
 
-# This code will be replaced with MindSpore from Pytorch.
+# This code will be replaced to MindSpore from Pytorch.
