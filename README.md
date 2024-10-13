@@ -4,7 +4,7 @@
 
 2. MutiHeadAttention √
 
-3. Encoder
+3. Encoder √
 
 敲到一半发现Layer Norm层没写，道心破碎了555
 
