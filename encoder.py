@@ -4,6 +4,10 @@ import torch.nn.functional as F
 import attention
 import layerorm
 import transformer
+
+x=torch.rand(128,32,512)  # 例子
+d_model=512
+n_layer=6
 class PositionwiseFeed(nn.Module):   # ForwardFeed
     def __init__(self,d_model,hidden,dropout=0.1):
         super(PositionwiseFeed,self).__init__()
@@ -44,10 +48,10 @@ class EncoderLayer(nn.Module):  # Encoder
 class Encoder(nn.Module):
     def __init__(self,device, enc_voc_size,max_len,d_model, ffn_hidden, n_head, n_layer, dropout=0.1 ):  # 词汇表大小、最大序列长度
         super(Encoder,self).__init__()
-        self.embedding=transformer.TransformerEmbedding(enc_voc_size, d_model, dropout, device)
+        self.embedding=transformer.TransformerEmbedding(vocab_size=enc_voc_size,max_len=max_len, d_model=d_model, drop_prob=dropout, device=device)
         self.layers=nn.ModuleList(   # 比nn.Sequential更简单的写法，但是中间层不能复用
             [
-                EncoderLayer(d_model,ffn_hidden,n_head,device)
+                EncoderLayer(d_model,ffn_hidden,n_head,dropout)
                 for _ in range(n_layer)   # 创建n_layer个EncoderLayer存在列表中，之后可以遍历取出
             ]
         )
@@ -57,4 +61,9 @@ class Encoder(nn.Module):
         for layer in self.layers:
             x=layer(x,s_mask)   # 整个Encoder已经封装好了
         return x
+
+
+test=Encoder(d_model=d_model,n_layer=n_layer,max_len=6,ffn_hidden=1024,n_head=8,device="cuda",enc_voc_size=60)
+print(test(x))
+
 
