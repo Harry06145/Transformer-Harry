@@ -10,8 +10,20 @@
 
 4. Decoder
 
-5. Layer Norm
+5. Layer Norm √
 
 6. CrossAttention
 
 # This code will be replaced to MindSpore from Pytorch.
+
+1. Embedding  
+
+2. MutiHeadAttention 
+
+3. Encoder
+
+4. Decoder
+
+5. Layer Norm 
+
+6. CrossAttention
