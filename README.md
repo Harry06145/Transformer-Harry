@@ -12,7 +12,9 @@
 
 5. Layer Norm √
 
-6. CrossAttention
+6. CrossAttention √
+
+明天组网！！！！！
 
 # This code will be replaced to MindSpore from Pytorch.
 
