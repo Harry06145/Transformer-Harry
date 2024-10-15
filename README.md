@@ -8,7 +8,7 @@
 
 敲到一半发现Layer Norm层没写，道心破碎了555
 
-4. Decoder
+4. Decoder √
 
 5. Layer Norm √
 
