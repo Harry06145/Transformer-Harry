@@ -14,7 +14,7 @@
 
 6. CrossAttention √
 
-明天组网！！！！！
+明天组网！！！！！(一定！！！！)
 
 # This code will be replaced to MindSpore from Pytorch.
 
