@@ -1,41 +1,53 @@
 import torch
 from torch import nn
-import torch.nn.functional as F
+import torch.functional as F
 import math
-print(torch.cuda.is_available())
+import embedding
+import attention
+import decoder
+import encoder
+import layerorm
 
-# token embedding 输入的词汇表索引->指定维度embedding
-class TokenEmbedding(nn.Embedding):
-    def __init__(self, vocab_size, d_model): # 词汇表大小，维度
-        super(TokenEmbedding,self).__init__(vocab_size,d_model, padding_idx=1) # 索引为1填充，embedding 初始为0
+class Transformer(nn.Module):
+    def __init__(self,src_pad_ix,  # 源索引
+                 trg_pad_ix, # 目标索引
+                 enc_voc_size,  # 词汇表大小
+                 dec_voc_size,  # decoder词汇表大小
+                 d_model,
+                 n_head,
+                 ffn_hidden,
+                 max_len,
+                 n_layer,
+                 drop_prob,
+                 device):
 
-class PositionEmbedding(nn.Module):
-    def __init__(self, d_model, max_len, device): # 模型维度，最大长度，设备
-        super(PositionEmbedding, self).__init__()
-        self.encoding=torch.zeros(max_len,d_model,device=device)  # [max_len, d_model], 0
-        self.encoding.requires_grad=False
-        pos=torch.arange(0,max_len,device=device)  # 一维向量，start, end, step, device
-        pos=pos.float().unsqueeze(dim=1) #(max_len)->(max_len,1)
-        _2i=torch.arange(0,d_model,2,device=device).float()
-        self.encoding[:,0::2]=torch.sin(pos/(10000**(_2i/d_model)))    # 偶数位置
-        self.encoding[:,1::2]=torch.cos(pos/(10000**(_2i/d_model)))    # 奇数位置
+        super(Transformer,self).__init__()
 
-    def forward(self, x):
-            batch_size,seq_len=x.size() #  序列长度
-            return self.encoding[:seq_len,:] # 返回前seq_len的encoding
+        self.encoder=encoder.Encoder(device, enc_voc_size,max_len,d_model, ffn_hidden, n_head, n_layer, dropout=drop_prob)
+        self.decoder=decoder.Decoder(dec_voc_size,max_len,d_model,ffn_hidden,n_head,n_layer,drop_prob, device)
+        self.src_pad_ix=src_pad_ix
+        self.trg_pad_ix=trg_pad_ix
+        self.device=device
 
+    def make_pad_mask(self,q,k,pad_idx_q,pad_idx_k):
+        len_q,len_k=q.size(1),k.size(1)
+        q=q.ne(pad_idx_q).unsqueeze(1).unsqueeze(3)
+        q=q.repeat(1,1,1,len_k)
+        k = k.ne(pad_idx_k).unsqueeze(1).unsqueeze(2)
+        k = k.repeat(1, 1, len_q,1)
+        mask=q&k
+        return mask
 
-class TransformerEmbedding(nn.Module):
-    def __init__(self, vocab_size, d_model, max_len, drop_prob, device):
-        super(TransformerEmbedding,self).__init__()
-        self.tok_emb=TokenEmbedding(vocab_size,d_model)
-        self.pos_emb=PositionEmbedding(d_model=d_model,max_len=max_len,device=device)
-        self.drop_out=nn.Dropout(p=drop_prob) #  随机丢弃神经元，防止过拟合
+    def make_casual_mask(self,q,k):
+        mask=torch.trill(torch.ones(len(q),len(k))).type(torch.BoolTensor).to(self.device)
+        return mask
 
-    def forward(self,x):
-        tok_emb=self.tok_emb(x)  # 初始化tok
-        pos_emb=self.pos_emb(x)  # 初始化pos
-        return self.drop_out(tok_emb+pos_emb)
+    def forwad(self,src,trg):
+        src_mask=self.make_pad_mask(src,src,self.src_pad_ix,self.trg_pad_ix)
+        trg_mask=self.make_pad_mask(trg,trg,self.trg_pad_ix,self.trg_pad_ix)*self.make_casual_mask(trg,trg)
+        enc=self.encoder(src,src_mask)
+        out=self.decoder(trg,enc,trg_mask,src_mask)
+        return out
 
 
 

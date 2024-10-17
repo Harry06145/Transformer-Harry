@@ -4,7 +4,7 @@ import torch.nn.functional as F
 import encoder
 import attention
 import layerorm
-import transformer
+import embedding
 
 class DecoderLayer(nn.Module):
     def __init__(self,d_model,ffn_hidden, n_head, drop_prob):  # ffn为前馈神经网络的隐藏层
@@ -38,7 +38,7 @@ class DecoderLayer(nn.Module):
 class Decoder(nn.Module):
     def __init__(self,dec_voc_size,max_len,d_model,ffn_hidden,n_head,n_layer,drop_prob, device):  # decoder的词汇表，encoder的词汇表
         super(Decoder,self).__init__()
-        self.embedding=transformer.TransformerEmbedding(dec_voc_size, d_model, max_len, drop_prob, device)
+        self.embedding=embedding.TransformerEmbedding(dec_voc_size, d_model, max_len, drop_prob, device)
         self.layers = nn.ModuleList(  # 比nn.Sequential更简单的写法，但是中间层不能复用
             [
                 DecoderLayer(d_model, ffn_hidden, n_head, drop_prob)
@@ -48,10 +48,12 @@ class Decoder(nn.Module):
         self.fc=nn.Linear(d_model,dec_voc_size)  # 出decoder后的线性层
 
     def forward(self, dec,enc, t_mask,s_mask=None):
+
         dec = self.embedding(enc)
         for layer in self.layers:
             dec = layer(dec,enc,t_mask, s_mask)# 整个Decoder已经封装好了
         dec=self.fc(dec)
+
         return dec
 
 

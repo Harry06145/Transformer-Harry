@@ -3,7 +3,7 @@ from torch import nn
 import torch.nn.functional as F
 import attention
 import layerorm
-import transformer
+import embedding
 
 x=torch.rand(128,32,512)  # 例子
 d_model=512
@@ -14,7 +14,6 @@ class PositionwiseFeed(nn.Module):   # ForwardFeed
         self.fc1=nn.Linear(d_model,hidden)  # 全链接层
         self.fc2=nn.Linear(hidden,d_model)  # 经过一次映射后，重新映射回d_model维度
         self.dropout=nn.Dropout(dropout)  # 随机丢弃数据，防止过拟合
-
 
     def forward(self,x):
         x=self.fc1(x)  # ->(batch,hidden) 第一个全链接层
@@ -33,6 +32,8 @@ class EncoderLayer(nn.Module):  # Encoder
         self.norm2 = layerorm.LayerNorm(d_model)  # 第二个Norm层
         self.dropout2 = nn.Dropout(dropout)   # 第二个dropout层
 
+
+
     def forward(self,x,mask=None):  # Encoder计算步骤
         _x=x
         x=self.attention(x,x,x,mask)
@@ -42,19 +43,19 @@ class EncoderLayer(nn.Module):  # Encoder
         x=self.ffn(x)
         x=self.dropout2(x)
         x=self.norm2(x+_x)
-
         return x
 
-class Encoder(nn.Module):
+class Encoder(nn.Module):  #
     def __init__(self,device, enc_voc_size,max_len,d_model, ffn_hidden, n_head, n_layer, dropout=0.1 ):  # 词汇表大小、最大序列长度
         super(Encoder,self).__init__()
-        self.embedding=transformer.TransformerEmbedding(vocab_size=enc_voc_size,max_len=max_len, d_model=d_model, drop_prob=dropout, device=device)
+        self.embedding=embedding.TransformerEmbedding(vocab_size=enc_voc_size,max_len=max_len, d_model=d_model, drop_prob=dropout, device=device)
         self.layers=nn.ModuleList(   # 比nn.Sequential更简单的写法，但是中间层不能复用
             [
                 EncoderLayer(d_model,ffn_hidden,n_head,dropout)
                 for _ in range(n_layer)   # 创建n_layer个EncoderLayer存在列表中，之后可以遍历取出
             ]
         )
+        # 考虑把layer层翻倍，之后把第一层的参数复制一份再传给两个Encoder
 
     def forward(self,x,s_mask=None):
         x=self.embedding(x)
@@ -62,8 +63,7 @@ class Encoder(nn.Module):
             x=layer(x,s_mask)   # 整个Encoder已经封装好了
         return x
 
-
-test=Encoder(d_model=d_model,n_layer=n_layer,max_len=6,ffn_hidden=1024,n_head=8,device="cuda",enc_voc_size=60)
-print(test(x))
+# test=Encoder(d_model=d_model,n_layer=n_layer,max_len=6,ffn_hidden=1024,n_head=8,device="cuda",enc_voc_size=60)
+# print(test(x))
 
 

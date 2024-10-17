@@ -3,6 +3,8 @@ from torch import nn
 import math
 import torch.nn.functional as F
 
+
+
 x=torch.rand(128,32,512)  # 例子
 d_model=512
 n_head=8
