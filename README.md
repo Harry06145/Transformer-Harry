@@ -30,15 +30,4 @@
 
 6. CrossAttention
 
-## Requirement
-```
-python >= 3.10
-numpy >= 1.26.3
-opencv-python >= 4.11.0.86
-matplotlib >= 3.9.4
-```
 
-## Run
-```
-python code1.py (optional)--img_path [your_img_path] --start_x [start_x] --start_y [start_y] --end_x [end_x] --end_y [end_y]
-```
